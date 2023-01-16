@@ -1,10 +1,10 @@
 from typing import Dict, List
-from collections import defaultdict
 
 from suit import Suit
 from card import Card
 from deck import Deck
 from player import Player
+from scorecard import ScoreCard
 
 
 class Game:
@@ -16,17 +16,9 @@ class Game:
         self.number_of_players = len(players)
         self.trumps = Suit.CLUBS if number_of_rounds % 10 == 0 else Suit.HEARTS
         self.round_leader = players[0]
-        self.init_scorecard(number_of_rounds)
-        self.player_pre_game_init()
-
-    def init_scorecard(self, number_of_rounds: int) -> None:
-        scorecard = Dict[str, Dict[int, Dict[str, int]]]
-        self.scorecard: scorecard = defaultdict(lambda: defaultdict(dict))
         player_names = [player.player_name for player in self.players]
-        for player in player_names:
-            for round in range(number_of_rounds, 0, -1):
-                for value in ["Bid", "Taken", "Points"]:
-                    self.scorecard[player][round][value] = 0
+        self.scorecard = ScoreCard(self.number_of_rounds, player_names)
+        self.player_pre_game_init()
 
     def start_game(self) -> None:
         while self.current_number_of_cards > 0:
@@ -53,17 +45,17 @@ class Game:
         current_bids: List[int] = []
         for player in self.players:
             number_bid = player.bid(self.trumps, current_bids)
-            self.scorecard[player.player_name][self.current_number_of_cards][
-                "Bid"
-            ] = number_bid
+            self.scorecard.set_bid(
+                player.player_name, self.current_number_of_cards, number_bid
+            )
             current_bids.append(number_bid)
 
     def play_round(self) -> None:
         for _ in range(self.current_number_of_cards):
             trick_winner = self.play_trick()
-            self.scorecard[trick_winner.player_name][self.current_number_of_cards][
-                "Taken"
-            ] += 1
+            self.scorecard.add_trick(
+                trick_winner.player_name, self.current_number_of_cards
+            )
             # Rotate players until trick winner is leading
             while self.players[0] != trick_winner:
                 self.rotate_players()
@@ -88,16 +80,8 @@ class Game:
         )
         return self.current_trick[winning_card]
 
-    def update_score(self) -> None:
-        for player_name in self.scorecard:
-            scorecard_row = self.scorecard[player_name][self.current_number_of_cards]
-            scorecard_row["Points"] += scorecard_row["Taken"]
-
-            if scorecard_row["Bid"] == scorecard_row["Taken"]:
-                scorecard_row["Points"] += 10
-
     def cleanup(self) -> None:
-        self.update_score()
+        self.scorecard.update_scores(self.current_number_of_cards)
         self.post_round_event()
         if self.current_number_of_cards == 1:
             return

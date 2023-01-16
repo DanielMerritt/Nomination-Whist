@@ -1,7 +1,7 @@
 from random import shuffle
 from typing import List
 
-from card_value import Card_Value
+from card_value import CardValue
 from suit import Suit
 from card import Card
 
@@ -12,7 +12,7 @@ class Deck:
         for suit in Suit:
             if suit == Suit.NOTRUMPS:
                 continue
-            for value in Card_Value:
+            for value in CardValue:
                 self.deck.append(Card(suit, value))
         shuffle(self.deck)
 

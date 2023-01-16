@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Card_Value(Enum):
+class CardValue(Enum):
     TWO: int = 2
     THREE: int = 3
     FOUR: int = 4

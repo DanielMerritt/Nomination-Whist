@@ -1,12 +1,11 @@
 import random
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List
 
 from suit import Suit
 from card import Card
 from validation import BidValidation, TurnValidation
-
-Scorecard = Dict[str, Dict[int, Dict[str, int]]]
+from scorecard import ScoreCard
 
 
 class Player(ABC):
@@ -21,9 +20,9 @@ class Player(ABC):
         return self.player_name
 
     def pre_game_init(
-        self, number_of_rounds: int, number_of_players: int, scorecard: Scorecard
+        self, number_of_rounds: int, number_of_players: int, scorecard: ScoreCard
     ) -> None:
-        self.scorecard: Scorecard = scorecard
+        self.scorecard: ScoreCard = scorecard
         self.number_of_rounds = number_of_rounds
         self.number_of_players = number_of_players
 
@@ -36,18 +35,8 @@ class Player(ABC):
     def reset(self) -> None:
         self.hand = []
 
-    def update_scores(self, scorecard: Scorecard) -> None:
+    def update_scores(self, scorecard: ScoreCard) -> None:
         self.scorecard = scorecard
-
-    def get_scores(self) -> Dict[str, int]:
-        scores: Dict[str, int] = {}
-        for player in self.scorecard:
-            total_score = sum(
-                self.scorecard[player][i]["Points"]
-                for i in range(self.number_of_rounds, 0, -1)
-            )
-            scores[player] = total_score
-        return scores
 
     def sort_hand(self) -> None:
         self.hand.sort(key=lambda x: (x.suit.value, x.card_value.value))
@@ -95,7 +84,7 @@ class Player(ABC):
         """Return a card from self.hand to play"""
 
     @abstractmethod
-    def post_round(self, scorecard: Scorecard) -> None:
+    def post_round(self, scorecard: ScoreCard) -> None:
         """Handles post round events"""
 
 
@@ -120,7 +109,7 @@ class RandomBot(Player):
 
         return random.choice(self.hand)
 
-    def post_round(self, scorecard: Scorecard) -> None:
+    def post_round(self, scorecard: ScoreCard) -> None:
         self.update_scores(scorecard)
 
 
@@ -181,14 +170,14 @@ class HumanInputPlayer(Player):
 
             return self.hand[int(card_idx)]
 
-    def post_round(self, scorecard: Scorecard) -> None:
+    def post_round(self, scorecard: ScoreCard) -> None:
         self.update_scores(scorecard)
         self.print_scores()
         self.sort_hand()
 
     def print_scores(self) -> None:
         print("Scores: ")
-        scores = self.get_scores()
+        scores = self.scorecard.get_total_scores()
         for player in scores:
             print(f"{player}: {scores[player]}")
         print()
