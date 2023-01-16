@@ -65,9 +65,10 @@ class Player(ABC):
             and len(current_bids) == self.number_of_players - 1
         ):
             return BidValidation.RestrictedBid
+        return None
 
     def validate_turn(
-        self, card_idx: int, cards_played: List[Card]
+        self, card_idx: str, cards_played: List[Card]
     ) -> TurnValidation | None:
         if not card_idx.isnumeric():
             return TurnValidation.NotNumeric
@@ -83,6 +84,7 @@ class Player(ABC):
             and any(card for card in self.hand if card.suit == cards_played[0].suit)
         ):
             return TurnValidation.RestrictedSuit
+        return None
 
     @abstractmethod
     def bid(self, trumps: Suit, current_bids: List[int]) -> int:
